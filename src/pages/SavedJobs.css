@@ -1,0 +1,206 @@
+.saved-jobs-page {
+  min-height: 100vh;
+
+  padding: 60px 7%;
+
+  background-color: #f5f8ff;
+}
+
+.saved-jobs-container {
+  max-width: 1000px;
+
+  margin: auto;
+}
+
+.saved-heading {
+  margin-bottom: 35px;
+}
+
+.saved-heading h1 {
+  font-size: 35px;
+
+  margin-bottom: 10px;
+}
+
+.saved-heading p {
+  color: #666;
+}
+
+
+.saved-job-card {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  background-color: white;
+
+  padding: 25px;
+
+  margin-bottom: 20px;
+
+  border-radius: 10px;
+
+  border: 1px solid #e5e5e5;
+}
+
+.saved-job-info {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+}
+
+.saved-company-logo {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 10px;
+
+  background-color: #2563eb;
+
+  color: white;
+
+  font-size: 22px;
+
+  font-weight: bold;
+}
+
+.saved-job-info h2 {
+  font-size: 20px;
+
+  margin-bottom: 7px;
+}
+
+.saved-job-info p {
+  color: #444;
+
+  margin-bottom: 5px;
+}
+
+.saved-job-info span {
+  color: #777;
+
+  font-size: 14px;
+}
+
+.saved-job-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.view-saved-btn,
+.remove-btn {
+  padding: 9px 15px;
+
+  border-radius: 6px;
+
+  font-size: 14px;
+
+  cursor: pointer;
+}
+
+.view-saved-btn {
+  background-color: #2563eb;
+
+  color: white;
+
+  text-decoration: none;
+}
+
+.remove-btn {
+  border: 1px solid #ef4444;
+
+  background-color: white;
+
+  color: #ef4444;
+}
+
+.remove-btn:hover {
+  background-color: #ef4444;
+
+  color: white;
+}
+
+
+.no-saved-jobs {
+  padding: 70px 20px;
+
+  text-align: center;
+
+  background-color: white;
+
+  border-radius: 10px;
+
+  border: 1px solid #e5e5e5;
+}
+
+.empty-icon {
+  font-size: 50px;
+
+  color: #aaa;
+
+  margin-bottom: 15px;
+}
+
+.no-saved-jobs h2 {
+  margin-bottom: 10px;
+}
+
+.no-saved-jobs p {
+  color: #666;
+
+  margin-bottom: 25px;
+}
+
+.browse-btn {
+  display: inline-block;
+
+  padding: 12px 20px;
+
+  background-color: #2563eb;
+
+  color: white;
+
+  border-radius: 7px;
+
+  text-decoration: none;
+}
+
+
+@media (max-width: 700px) {
+
+  .saved-jobs-page {
+    padding: 40px 5%;
+  }
+
+  .saved-job-card {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 20px;
+  }
+
+  .saved-job-actions {
+    width: 100%;
+  }
+
+  .view-saved-btn,
+  .remove-btn {
+    flex: 1;
+
+    text-align: center;
+  }
+
+}

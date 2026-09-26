@@ -1,0 +1,163 @@
+.applications-page {
+  min-height: 100vh;
+  padding: 60px 7%;
+  background-color: #f5f8ff;
+}
+
+.applications-container {
+  max-width: 1000px;
+  margin: auto;
+}
+
+.applications-heading {
+  margin-bottom: 35px;
+}
+
+.applications-heading h1 {
+  font-size: 35px;
+  margin-bottom: 10px;
+}
+
+.applications-heading p {
+  color: #666;
+}
+
+
+.application-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background-color: white;
+
+  padding: 25px;
+
+  margin-bottom: 20px;
+
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+}
+
+.application-info {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.application-logo {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 10px;
+
+  background-color: #2563eb;
+  color: white;
+
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.application-info h2 {
+  font-size: 20px;
+  margin-bottom: 7px;
+}
+
+.company {
+  color: #444;
+  margin-bottom: 5px;
+}
+
+.location {
+  color: #777;
+  font-size: 14px;
+}
+
+.application-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.status {
+  padding: 7px 14px;
+
+  border-radius: 20px;
+
+  background-color: #dcfce7;
+  color: #166534;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.view-job-btn {
+  padding: 9px 15px;
+
+  border-radius: 6px;
+
+  background-color: #2563eb;
+  color: white;
+
+  text-decoration: none;
+
+  font-size: 14px;
+}
+
+
+.no-applications {
+  padding: 70px 20px;
+
+  text-align: center;
+
+  background-color: white;
+
+  border-radius: 10px;
+
+  border: 1px solid #e5e5e5;
+}
+
+.no-applications h2 {
+  margin-bottom: 10px;
+}
+
+.no-applications p {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.browse-jobs-btn {
+  display: inline-block;
+
+  padding: 12px 20px;
+
+  background-color: #2563eb;
+  color: white;
+
+  border-radius: 7px;
+
+  text-decoration: none;
+}
+
+
+@media (max-width: 700px) {
+
+  .applications-page {
+    padding: 40px 5%;
+  }
+
+  .application-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .application-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+}
