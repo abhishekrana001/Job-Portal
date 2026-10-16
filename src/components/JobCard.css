@@ -1,105 +1,263 @@
-.job-card {
-  padding: 25px;
-  background-color: white;
-
-  border: 1px solid #e5e5e5;
-  border-radius: 12px;
-
-  transition: 0.3s;
-}
-
-.job-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-}
-
-.job-header {
+.job-card-modern {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
-
-  margin-bottom: 20px;
+  gap: 18px;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
-.company-logo {
-  width: 45px;
-  height: 45px;
+.job-card-modern:hover {
+  transform: translateY(-4px);
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow-card-hover);
+}
 
+.job-card-modern.is-featured {
+  border-color: rgba(79, 70, 229, 0.3);
+  background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+}
+
+.featured-badge {
+  position: absolute;
+  top: 14px;
+  right: 18px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+}
 
-  border-radius: 8px;
+/* Card Top */
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
 
-  background-color: #2563eb;
-  color: white;
+.company-branding {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
 
+.company-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  color: #ffffff;
   font-size: 20px;
-  font-weight: bold;
+  font-weight: 800;
+  font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
-.save-btn {
-  border: none;
-  background: transparent;
-
-  font-size: 25px;
-
-  cursor: pointer;
-
-  color: #777;
-
-  transition: 0.2s;
+.company-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.save-btn:hover {
-  transform: scale(1.15);
+.company-name-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.save-btn.saved {
+.verified-icon {
+  color: #3b82f6;
+}
+
+.sub-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.location-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.workplace-pill {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+/* Save Bookmark Button */
+.btn-save-bookmark {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-save-bookmark:hover {
+  background: #fdf2f8;
+  border-color: #f472b6;
+  color: #ec4899;
+  transform: scale(1.1);
+}
+
+.btn-save-bookmark.active {
+  background: #fef2f2;
+  border-color: #fca5a5;
   color: #ef4444;
 }
 
-.job-card h3 {
-  font-size: 20px;
-  margin-bottom: 8px;
-}
-
-.company-name {
-  color: #666;
-  margin-bottom: 20px;
-}
-
-.job-info {
+/* Card Body */
+.card-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-
-  color: #666;
-  font-size: 14px;
-
-  margin-bottom: 20px;
+  gap: 10px;
 }
 
-.job-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.salary {
-  font-weight: bold;
-  color: #222;
-}
-
-.details-btn {
-  padding: 9px 15px;
-
-  border: none;
-  border-radius: 6px;
-
-  background-color: #2563eb;
-  color: white;
-
-  cursor: pointer;
+.job-title-link {
   text-decoration: none;
+}
+
+.job-title-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+  transition: color 0.15s ease;
+}
+
+.job-card-modern:hover .job-title-text {
+  color: var(--primary);
+}
+
+.job-excerpt {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Tags Row */
+.job-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.tag-pill {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+/* Card Footer */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+  gap: 12px;
+}
+
+.salary-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.salary-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.salary-amount {
+  font-size: 16px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  color: var(--text-primary);
+}
+
+.btn-view-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  border: 1px solid rgba(79, 70, 229, 0.15);
+  transition: var(--transition-fast);
+}
+
+.arrow-icon {
+  transition: transform 0.2s ease;
+}
+
+.btn-view-details:hover {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.btn-view-details:hover .arrow-icon {
+  transform: translate(2px, -2px);
 }

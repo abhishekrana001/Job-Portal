@@ -1,135 +1,155 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  Bookmark,
+  Building2,
+  MapPin,
+  Briefcase,
+  Trash2,
+  ArrowRight,
+  Sparkles,
+  Inbox
+} from "lucide-react";
+import { useToast } from "../context/ToastContext";
 import "./SavedJobs.css";
 
 function SavedJobs() {
-
   const [savedJobs, setSavedJobs] = useState([]);
+  const { showToast } = useToast();
 
   useEffect(() => {
-
-    const jobs =
-      JSON.parse(localStorage.getItem("savedJobs")) || [];
-
-    setSavedJobs(jobs);
-
+    try {
+      const jobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
+      setSavedJobs(jobs);
+    } catch (e) {
+      setSavedJobs([]);
+    }
   }, []);
 
-  const handleRemove = (id) => {
+  const handleRemove = (id, title) => {
+    try {
+      const updated = savedJobs.filter((j) => j.id !== id);
+      localStorage.setItem("savedJobs", JSON.stringify(updated));
+      setSavedJobs(updated);
+      showToast(`Removed "${title}" from bookmarks`, "info");
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
-    const updatedJobs = savedJobs.filter(
-      (job) => job.id !== id
-    );
-
-    localStorage.setItem(
-      "savedJobs",
-      JSON.stringify(updatedJobs)
-    );
-
-    setSavedJobs(updatedJobs);
+  const handleClearAll = () => {
+    if (window.confirm("Are you sure you want to remove all saved jobs?")) {
+      localStorage.setItem("savedJobs", JSON.stringify([]));
+      setSavedJobs([]);
+      showToast("All bookmarked jobs cleared", "info");
+      window.dispatchEvent(new Event("storage"));
+    }
   };
 
   return (
-    <main className="saved-jobs-page">
-
-      <div className="saved-jobs-container">
-
-        <div className="saved-heading">
-
-          <h1>Saved Jobs</h1>
-
+    <main className="saved-jobs-page-modern">
+      {/* Header Banner */}
+      <section className="saved-hero-strip">
+        <div className="saved-hero-inner">
+          <span className="saved-badge">
+            <Sparkles size={13} />
+            Bookmarks
+          </span>
+          <h1>My Saved Opportunities</h1>
           <p>
-            Jobs you've saved for later.
+            Positions you've bookmarked for later review. Apply before the listings close!
           </p>
-
         </div>
+      </section>
+
+      <div className="saved-container">
+        {savedJobs.length > 0 && (
+          <div className="saved-top-bar">
+            <h2>
+              {savedJobs.length} {savedJobs.length === 1 ? "Job Saved" : "Jobs Saved"}
+            </h2>
+            <button
+              type="button"
+              className="btn-clear-all-saved"
+              onClick={handleClearAll}
+            >
+              <Trash2 size={14} /> Clear All
+            </button>
+          </div>
+        )}
 
         {savedJobs.length === 0 ? (
-
-          <div className="no-saved-jobs">
-
-            <div className="empty-icon">
-              ♡
+          <div className="empty-saved-box">
+            <div className="empty-bookmark-halo">
+              <Bookmark size={36} />
             </div>
-
-            <h2>No Saved Jobs</h2>
-
+            <h2>No Saved Jobs Yet</h2>
             <p>
-              You haven't saved any jobs yet.
+              Keep track of roles you're interested in by clicking the bookmark button on any job card.
             </p>
-
-            <Link
-              to="/jobs"
-              className="browse-btn"
-            >
-              Browse Jobs
+            <Link to="/jobs" className="btn-browse-saved">
+              <span>Browse Active Jobs</span>
+              <ArrowRight size={16} />
             </Link>
-
           </div>
-
         ) : (
-
-          <div className="saved-jobs-list">
-
+          <div className="saved-jobs-list-grid">
             {savedJobs.map((job) => (
-
-              <div
-                className="saved-job-card"
-                key={job.id}
-              >
-
-                <div className="saved-job-info">
-
-                  <div className="saved-company-logo">
-                    {job.company.charAt(0)}
+              <div className="modern-saved-card" key={job.id}>
+                <div className="saved-left-info">
+                  <div
+                    className="saved-avatar"
+                    style={{
+                      background:
+                        job.logoBg || "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                    }}
+                  >
+                    {job.company ? job.company.charAt(0).toUpperCase() : "J"}
                   </div>
-
                   <div>
-
-                    <h2>{job.title}</h2>
-
-                    <p>
-                      {job.company}
-                    </p>
-
-                    <span>
-                      📍 {job.location}
-                    </span>
-
+                    <h2 className="saved-job-title">{job.title}</h2>
+                    <div className="saved-meta-row">
+                      <span>
+                        <Building2 size={13} /> {job.company}
+                      </span>
+                      <span>
+                        <MapPin size={13} /> {job.location}
+                      </span>
+                      {job.type && (
+                        <span>
+                          <Briefcase size={13} /> {job.type}
+                        </span>
+                      )}
+                      {job.salary && (
+                        <span className="saved-salary-tag">{job.salary}</span>
+                      )}
+                    </div>
                   </div>
-
                 </div>
 
-                <div className="saved-job-actions">
+                <div className="saved-right-actions">
+                  <Link to={`/jobs/${job.id}/apply`} className="btn-quick-apply-saved">
+                    Apply Now
+                  </Link>
 
-                  <Link
-                    to={`/jobs/${job.id}`}
-                    className="view-saved-btn"
-                  >
-                    View Job
+                  <Link to={`/jobs/${job.id}`} className="btn-view-saved">
+                    View Details
                   </Link>
 
                   <button
-                    className="remove-btn"
-                    onClick={() =>
-                      handleRemove(job.id)
-                    }
+                    className="btn-remove-saved"
+                    onClick={() => handleRemove(job.id, job.title)}
+                    title="Remove from bookmarks"
                   >
-                    Remove
+                    <Trash2 size={16} />
                   </button>
-
                 </div>
-
               </div>
-
             ))}
-
           </div>
-
         )}
-
       </div>
-
     </main>
   );
 }

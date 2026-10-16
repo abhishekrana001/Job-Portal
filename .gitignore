@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files - KABHI bhi push mat karo!
+.env
+.env.local
+.env.production
+backend/.env
