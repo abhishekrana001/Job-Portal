@@ -3,9 +3,9 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function AdminRoute({ children }) {
-  const { isLoggedIn, isAdmin } = useAuth();
+  const { isLoggedIn, isAdmin, isEmployer } = useAuth();
 
-  if (!isLoggedIn || !isAdmin) {
+  if (!isLoggedIn || (!isAdmin && !isEmployer)) {
     return <Navigate to="/login" replace />;
   }
 

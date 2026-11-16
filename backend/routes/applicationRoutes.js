@@ -3,19 +3,21 @@ const router = express.Router();
 const {
   applyForJob,
   getMyApplications,
+  getEmployerApplications,
   getAllApplications,
   updateApplicationStatus,
   deleteApplication,
 } = require("../controllers/applicationController");
-const { protect, adminOnly } = require("../middleware/authMiddleware");
+const { protect, adminOnly, employerOrAdmin } = require("../middleware/authMiddleware");
 
-// User routes
+// Job Seeker routes
 router.post("/", protect, applyForJob);
 router.get("/my", protect, getMyApplications);
 
-// Admin routes
+// Employer & Admin routes
+router.get("/employer", protect, employerOrAdmin, getEmployerApplications);
 router.get("/", protect, adminOnly, getAllApplications);
-router.put("/:id/status", protect, adminOnly, updateApplicationStatus);
-router.delete("/:id", protect, adminOnly, deleteApplication);
+router.put("/:id/status", protect, employerOrAdmin, updateApplicationStatus);
+router.delete("/:id", protect, employerOrAdmin, deleteApplication);
 
 module.exports = router;

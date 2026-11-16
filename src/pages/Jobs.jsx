@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import jobs from "../data/jobs";
+import { getStoredJobs } from "../utils/jobStorage";
 import JobCard from "../components/JobCard";
 import {
   Search,
@@ -40,6 +40,19 @@ function Jobs() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("latest");
   const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
+  const [allJobs, setAllJobs] = useState(() => getStoredJobs());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setAllJobs(getStoredJobs());
+    };
+    window.addEventListener("jobStorageUpdated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("jobStorageUpdated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -62,7 +75,7 @@ function Jobs() {
 
   // Filter & sort logic
   const filteredJobs = useMemo(() => {
-    return jobs
+    return allJobs
       .filter((job) => {
         const query = search.toLowerCase().trim();
         const searchMatch =

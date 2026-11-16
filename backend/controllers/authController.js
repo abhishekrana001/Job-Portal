@@ -6,7 +6,7 @@ const generateToken = require("../utils/generateToken");
 // @access Public
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, role, companyName, title } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -14,14 +14,31 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "User already exists with this email" });
     }
 
+    // Determine normalized role
+    const assignedRole = ["employer", "recruiter"].includes(role)
+      ? "employer"
+      : role === "admin"
+      ? "admin"
+      : "jobseeker";
+
     // Create user
-    const user = await User.create({ name, email, password, phone });
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: assignedRole,
+      companyName: companyName || "",
+      title: title || "",
+    });
 
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
       phone: user.phone,
+      title: user.title,
+      companyName: user.companyName,
       role: user.role,
       token: generateToken(user._id),
     });
@@ -75,6 +92,7 @@ const loginUser = async (req, res) => {
       title: user.title,
       skills: user.skills,
       location: user.location,
+      companyName: user.companyName || "",
       role: user.role,
       token: generateToken(user._id),
     });

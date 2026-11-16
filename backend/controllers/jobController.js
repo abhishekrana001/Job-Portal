@@ -53,9 +53,24 @@ const getJobById = async (req, res) => {
   }
 };
 
-// @desc  Create new job (Admin only)
+// @desc  Get jobs posted by logged-in employer / admin
+// @route GET /api/jobs/my/posted
+// @access Private/Employer/Admin
+const getMyPostedJobs = async (req, res) => {
+  try {
+    const filter = req.user?.role === "admin" ? {} : { postedBy: req.user?._id };
+    const jobs = await Job.find(filter)
+      .populate("applicants")
+      .sort({ createdAt: -1 });
+    res.json(jobs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc  Create new job (Employer or Admin)
 // @route POST /api/jobs
-// @access Private/Admin
+// @access Private/Employer/Admin
 const createJob = async (req, res) => {
   try {
     const job = await Job.create({ ...req.body, postedBy: req.user?._id });
@@ -65,29 +80,48 @@ const createJob = async (req, res) => {
   }
 };
 
-// @desc  Update job (Admin only)
+// @desc  Update job (Employer or Admin)
 // @route PUT /api/jobs/:id
-// @access Private/Admin
+// @access Private/Employer/Admin
 const updateJob = async (req, res) => {
   try {
-    const job = await Job.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: "Job not found" });
+
+    // Ensure only the job poster or an admin can update
+    if (
+      req.user.role !== "admin" &&
+      job.postedBy &&
+      job.postedBy.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: "Not authorized to update this job" });
+    }
+
+    Object.assign(job, req.body);
+    await job.save();
     res.json(job);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc  Delete job (Admin only)
+// @desc  Delete job (Employer or Admin)
 // @route DELETE /api/jobs/:id
-// @access Private/Admin
+// @access Private/Employer/Admin
 const deleteJob = async (req, res) => {
   try {
-    const job = await Job.findByIdAndDelete(req.params.id);
+    const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: "Job not found" });
+
+    if (
+      req.user.role !== "admin" &&
+      job.postedBy &&
+      job.postedBy.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: "Not authorized to delete this job" });
+    }
+
+    await Job.findByIdAndDelete(req.params.id);
     res.json({ message: "Job deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -118,4 +152,12 @@ const toggleSaveJob = async (req, res) => {
   }
 };
 
-module.exports = { getAllJobs, getJobById, createJob, updateJob, deleteJob, toggleSaveJob };
+module.exports = {
+  getAllJobs,
+  getJobById,
+  getMyPostedJobs,
+  createJob,
+  updateJob,
+  deleteJob,
+  toggleSaveJob,
+};

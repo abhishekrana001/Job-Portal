@@ -19,7 +19,7 @@ import {
 import "./Navbar.css";
 
 function Navbar() {
-  const { user, isLoggedIn, isAdmin, logout } = useAuth();
+  const { user, isLoggedIn, isAdmin, isEmployer, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -104,7 +104,8 @@ function Navbar() {
             <span>Companies</span>
           </NavLink>
 
-          {isLoggedIn && !isAdmin && (
+          {/* Job Seeker Navigation */}
+          {isLoggedIn && !isAdmin && !isEmployer && (
             <>
               <NavLink
                 to="/saved-jobs"
@@ -122,24 +123,52 @@ function Navbar() {
                 className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
               >
                 <FileText size={17} />
-                <span>Applications</span>
+                <span>My Applications</span>
               </NavLink>
             </>
           )}
 
-          {isLoggedIn && isAdmin && (
-            <NavLink
-              to="/admin/dashboard"
-              className={({ isActive }) => `nav-link nav-link-admin ${isActive ? "active" : ""}`}
-            >
-              <Shield size={17} />
-              <span>Admin Panel</span>
-            </NavLink>
+          {/* Recruiter / Employer Navigation */}
+          {isLoggedIn && (isAdmin || isEmployer) && (
+            <>
+              <NavLink
+                to="/admin/dashboard"
+                className={({ isActive }) => `nav-link nav-link-admin ${isActive ? "active" : ""}`}
+              >
+                <Building2 size={17} />
+                <span>Recruiter Dashboard</span>
+              </NavLink>
+            </>
           )}
         </nav>
 
         {/* Right Auth / Profile Section */}
         <div className="nav-actions">
+          {/* Post Job Quick CTA for Recruiters & Guests */}
+          {(!isLoggedIn || isEmployer || isAdmin) && (
+            <Link
+              to={isLoggedIn ? "/admin/dashboard?tab=post-job" : "/register"}
+              className="btn-post-job-cta"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                color: "#ffffff",
+                padding: "8px 14px",
+                borderRadius: "10px",
+                fontWeight: "600",
+                fontSize: "0.85rem",
+                textDecoration: "none",
+                boxShadow: "0 2px 8px rgba(16, 185, 129, 0.25)",
+                marginRight: "4px"
+              }}
+            >
+              <Briefcase size={15} />
+              <span>{isEmployer || isAdmin ? "+ Post Job" : "Post a Job"}</span>
+            </Link>
+          )}
+
           {isLoggedIn ? (
             <div className="user-profile-menu">
               <Link to="/profile" className="user-pill" title="View Profile">
@@ -148,6 +177,17 @@ function Navbar() {
                 </div>
                 <span className="user-display-name">
                   {user?.name?.split(" ")[0] || "User"}
+                </span>
+                <span style={{
+                  fontSize: "0.68rem",
+                  padding: "2px 6px",
+                  borderRadius: "6px",
+                  background: isEmployer || isAdmin ? "rgba(16, 185, 129, 0.2)" : "rgba(59, 130, 246, 0.2)",
+                  color: isEmployer || isAdmin ? "#10b981" : "#60a5fa",
+                  fontWeight: "600",
+                  textTransform: "uppercase"
+                }}>
+                  {isAdmin || isEmployer ? "Recruiter" : "Candidate"}
                 </span>
               </Link>
               <button
@@ -167,7 +207,7 @@ function Navbar() {
               </Link>
               <Link to="/register" className="btn-primary-nav">
                 <UserPlus size={16} />
-                <span>Get Started</span>
+                <span>Register</span>
               </Link>
             </div>
           )}
@@ -218,15 +258,23 @@ function Navbar() {
             <>
               <div className="mobile-divider" />
 
-              {isAdmin ? (
+              {isAdmin || isEmployer ? (
                 <>
                   <NavLink
                     to="/admin/dashboard"
                     className={({ isActive }) => `mobile-nav-item mobile-nav-admin ${isActive ? "active" : ""}`}
                     onClick={closeMenu}
                   >
-                    <Shield size={18} />
-                    <span>Admin Dashboard</span>
+                    <Building2 size={18} />
+                    <span>Recruiter Dashboard</span>
+                  </NavLink>
+                  <NavLink
+                    to="/profile"
+                    className={({ isActive }) => `mobile-nav-item ${isActive ? "active" : ""}`}
+                    onClick={closeMenu}
+                  >
+                    <User size={18} />
+                    <span>My Profile ({user?.name})</span>
                   </NavLink>
                   <button className="mobile-logout-btn" onClick={handleLogout}>
                     <LogOut size={18} />

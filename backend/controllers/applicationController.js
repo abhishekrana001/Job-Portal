@@ -58,14 +58,26 @@ const getMyApplications = async (req, res) => {
   }
 };
 
-// @desc  Get all applications (Admin only)
-// @route GET /api/applications
-// @access Private/Admin
-const getAllApplications = async (req, res) => {
+// @desc  Get applications for employer's posted jobs or all (Admin)
+// @route GET /api/applications/employer
+// @access Private/Employer/Admin
+const getEmployerApplications = async (req, res) => {
   try {
-    const applications = await Application.find()
-      .populate("job", "title company location")
-      .populate("applicant", "name email")
+    let jobIds;
+    if (req.user?.role === "admin") {
+      const applications = await Application.find()
+        .populate("job", "title company location salary type")
+        .populate("applicant", "name email phone skills")
+        .sort({ createdAt: -1 });
+      return res.json(applications);
+    }
+
+    const postedJobs = await Job.find({ postedBy: req.user._id }).select("_id");
+    jobIds = postedJobs.map((j) => j._id);
+
+    const applications = await Application.find({ job: { $in: jobIds } })
+      .populate("job", "title company location salary type")
+      .populate("applicant", "name email phone skills")
       .sort({ createdAt: -1 });
 
     res.json(applications);
@@ -74,27 +86,51 @@ const getAllApplications = async (req, res) => {
   }
 };
 
-// @desc  Update application status (Admin only)
-// @route PUT /api/applications/:id/status
+// @desc  Get all applications (Admin only)
+// @route GET /api/applications
 // @access Private/Admin
+const getAllApplications = async (req, res) => {
+  try {
+    const applications = await Application.find()
+      .populate("job", "title company location")
+      .populate("applicant", "name email phone")
+      .sort({ createdAt: -1 });
+
+    res.json(applications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc  Update application status (Employer or Admin)
+// @route PUT /api/applications/:id/status
+// @access Private/Employer/Admin
 const updateApplicationStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const application = await Application.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
+    const application = await Application.findById(req.params.id).populate("job");
     if (!application) return res.status(404).json({ message: "Application not found" });
+
+    // Ensure authorization
+    if (
+      req.user.role !== "admin" &&
+      application.job?.postedBy &&
+      application.job.postedBy.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: "Not authorized to update this application" });
+    }
+
+    application.status = status;
+    await application.save();
     res.json(application);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc  Delete application (Admin only)
+// @desc  Delete application (Employer or Admin)
 // @route DELETE /api/applications/:id
-// @access Private/Admin
+// @access Private/Employer/Admin
 const deleteApplication = async (req, res) => {
   try {
     const app = await Application.findByIdAndDelete(req.params.id);
@@ -108,6 +144,7 @@ const deleteApplication = async (req, res) => {
 module.exports = {
   applyForJob,
   getMyApplications,
+  getEmployerApplications,
   getAllApplications,
   updateApplicationStatus,
   deleteApplication,

@@ -52,6 +52,8 @@ export const jobsAPI = {
 
   getById: (id) => request(`/jobs/${id}`),
 
+  getMyPosted: () => request("/jobs/my/posted"),
+
   create: (jobData) =>
     request("/jobs", { method: "POST", body: JSON.stringify(jobData) }),
 
@@ -71,7 +73,9 @@ export const applicationsAPI = {
 
   getMyApplications: () => request("/applications/my"),
 
-  // Admin only
+  getEmployerApplications: () => request("/applications/employer"),
+
+  // Admin / Recruiter
   getAll: () => request("/applications"),
 
   updateStatus: (id, status) =>

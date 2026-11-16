@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import jobs from "../data/jobs";
+import { getJobById, getStoredJobs } from "../utils/jobStorage";
 import JobCard from "../components/JobCard";
 import {
   MapPin,
@@ -26,7 +26,8 @@ function JobDetails() {
 
   const [isSaved, setIsSaved] = useState(false);
 
-  const job = jobs.find((j) => j.id === Number(id));
+  const job = getJobById(id);
+  const allJobs = getStoredJobs();
 
   useEffect(() => {
     if (!job) return;
@@ -86,8 +87,8 @@ function JobDetails() {
     job.logoBg || "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)";
 
   // Similar jobs
-  const similarJobs = jobs
-    .filter((j) => j.id !== job.id && (j.category === job.category || j.type === job.type))
+  const similarJobs = allJobs
+    .filter((j) => Number(j.id) !== Number(job.id) && (j.category === job.category || j.type === job.type))
     .slice(0, 3);
 
   return (

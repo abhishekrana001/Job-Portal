@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import defaultJobs from "../data/jobs";
+import {
+  getStoredJobs,
+  saveJobListing,
+  deleteJobListing,
+  getStoredApplications,
+  updateApplicationStatus,
+  deleteApplicationRecord,
+} from "../utils/jobStorage";
 import {
   LayoutDashboard,
   Briefcase,
@@ -42,39 +49,17 @@ import {
 import "./AdminDashboard.css";
 
 // ---------- Simulated Backend Data ----------
-const getStoredJobs = () => {
-  try {
-    const stored = JSON.parse(localStorage.getItem("adminJobs"));
-    return stored && stored.length > 0 ? stored : defaultJobs;
-  } catch {
-    return defaultJobs;
-  }
-};
-
 const getStoredUsers = () => {
   try {
-    return JSON.parse(localStorage.getItem("adminUsers")) || [
+    const registered = JSON.parse(localStorage.getItem("registeredUsers")) || [];
+    const defaults = [
       { id: 1, name: "Alex Morgan", email: "alex.developer@example.com", role: "Candidate", status: "Active", joined: "2026-09-12", applications: 5 },
       { id: 2, name: "Priya Sharma", email: "priya.s@example.com", role: "Candidate", status: "Active", joined: "2026-10-01", applications: 3 },
       { id: 3, name: "Rahul Verma", email: "rahul.v@example.com", role: "Recruiter", status: "Active", joined: "2026-08-20", applications: 0 },
       { id: 4, name: "Sneha Patel", email: "sneha.p@example.com", role: "Candidate", status: "Inactive", joined: "2026-07-15", applications: 1 },
       { id: 5, name: "Karan Malhotra", email: "karan.m@example.com", role: "Candidate", status: "Active", joined: "2026-10-10", applications: 7 },
     ];
-  } catch {
-    return [];
-  }
-};
-
-const getStoredApplications = () => {
-  try {
-    return JSON.parse(localStorage.getItem("adminApplications")) || [
-      { id: 1, candidate: "Alex Morgan", job: "Senior Java Developer", company: "Tech Solutions", status: "Under Review", applied: "2026-10-14" },
-      { id: 2, candidate: "Priya Sharma", job: "Lead React & Frontend Engineer", company: "Digital Labs", status: "Shortlisted", applied: "2026-10-13" },
-      { id: 3, candidate: "Karan Malhotra", job: "AI / Machine Learning Engineer", company: "NextGen AI", status: "Rejected", applied: "2026-10-12" },
-      { id: 4, candidate: "Alex Morgan", job: "Full Stack Web Developer", company: "WebWorks", status: "Hired", applied: "2026-10-10" },
-      { id: 5, candidate: "Sneha Patel", job: "Senior Product & UI/UX Designer", company: "Creative Studio", status: "Under Review", applied: "2026-10-09" },
-      { id: 6, candidate: "Rahul Verma", job: "Cloud & DevOps Engineer", company: "InnovateTech", status: "Shortlisted", applied: "2026-10-08" },
-    ];
+    return [...registered, ...defaults];
   } catch {
     return [];
   }
@@ -251,14 +236,15 @@ function JobFormModal({ job, onSave, onClose }) {
 // ========== Main AdminDashboard ==========
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { isAdmin, isLoggedIn, logout, user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { isAdmin, isEmployer, isLoggedIn, logout, user } = useAuth();
   const { showToast } = useToast();
 
   const [activeSection, setActiveSection] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [jobs, setJobs] = useState(getStoredJobs());
-  const [users, setUsers] = useState(getStoredUsers());
-  const [applications, setApplications] = useState(getStoredApplications());
+  const [jobs, setJobs] = useState(() => getStoredJobs());
+  const [users, setUsers] = useState(() => getStoredUsers());
+  const [applications, setApplications] = useState(() => getStoredApplications());
   const [jobSearch, setJobSearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [appSearch, setAppSearch] = useState("");
@@ -268,54 +254,78 @@ export default function AdminDashboard() {
 
   // Auth guard
   useEffect(() => {
-    if (!isLoggedIn || !isAdmin) {
+    if (!isLoggedIn || (!isAdmin && !isEmployer)) {
       navigate("/login");
     }
-  }, [isLoggedIn, isAdmin, navigate]);
+  }, [isLoggedIn, isAdmin, isEmployer, navigate]);
 
-  // Persist jobs
-  const saveJobs = (newJobs) => {
-    setJobs(newJobs);
-    localStorage.setItem("adminJobs", JSON.stringify(newJobs));
-  };
+  // Handle URL tab parameters (e.g. ?tab=post-job)
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "post-job") {
+      setActiveSection("jobs");
+      setJobModal("add");
+    } else if (tab === "jobs") {
+      setActiveSection("jobs");
+    } else if (tab === "applications") {
+      setActiveSection("applications");
+    }
+  }, [searchParams]);
+
+  // Sync data on changes
+  useEffect(() => {
+    const syncAll = () => {
+      setJobs(getStoredJobs());
+      setApplications(getStoredApplications());
+    };
+    window.addEventListener("jobStorageUpdated", syncAll);
+    window.addEventListener("applicationStorageUpdated", syncAll);
+    window.addEventListener("storage", syncAll);
+    return () => {
+      window.removeEventListener("jobStorageUpdated", syncAll);
+      window.removeEventListener("applicationStorageUpdated", syncAll);
+      window.removeEventListener("storage", syncAll);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate("/");
   };
 
-  // Job CRUD
+  // Job CRUD with unified storage
   const handleSaveJob = (jobData) => {
-    let updated;
-    if (jobModal && typeof jobModal === "object" && jobModal.id) {
-      updated = jobs.map((j) => (j.id === jobData.id ? jobData : j));
-      showToast("✅ Job updated successfully!", "success");
-    } else {
-      updated = [jobData, ...jobs];
-      showToast("🚀 Job posted successfully!", "success");
-    }
-    saveJobs(updated);
+    const existingId = jobModal && typeof jobModal === "object" ? jobModal.id : null;
+    const finalJob = {
+      ...jobData,
+      company: jobData.company || user?.companyName || "TechCorp",
+      postedBy: user?.name || "Recruiter",
+    };
+    const updated = saveJobListing(finalJob, existingId);
+    setJobs(updated);
     setJobModal(null);
+    showToast(existingId ? "✅ Job updated successfully!" : "🚀 Job posted successfully!", "success");
   };
 
   const handleDeleteJob = (id) => {
-    const updated = jobs.filter((j) => j.id !== id);
-    saveJobs(updated);
+    const updated = deleteJobListing(id);
+    setJobs(updated);
     setDeleteConfirm(null);
     showToast("🗑️ Job deleted.", "info");
   };
 
   const handleToggleFeatured = (id) => {
-    const updated = jobs.map((j) => j.id === id ? { ...j, featured: !j.featured } : j);
-    saveJobs(updated);
+    const current = jobs.find((j) => j.id === id);
+    if (!current) return;
+    const updated = saveJobListing({ ...current, featured: !current.featured }, id);
+    setJobs(updated);
     showToast("⭐ Featured status updated.", "success");
   };
 
   // Application status update
   const handleUpdateAppStatus = (id, newStatus) => {
-    const updated = applications.map((a) => a.id === id ? { ...a, status: newStatus } : a);
+    const updated = updateApplicationStatus(id, newStatus);
     setApplications(updated);
-    localStorage.setItem("adminApplications", JSON.stringify(updated));
     showToast(`Application marked as ${newStatus}`, "success");
   };
 
@@ -341,9 +351,12 @@ export default function AdminDashboard() {
   );
 
   const filteredApps = applications.filter((a) => {
+    const candidateName = (a.candidate || a.candidateName || a.name || "").toLowerCase();
+    const jobName = (a.job || a.jobTitle || "").toLowerCase();
+    const companyName = (a.company || "").toLowerCase();
+    const q = appSearch.toLowerCase();
     const matchSearch =
-      a.candidate.toLowerCase().includes(appSearch.toLowerCase()) ||
-      a.job.toLowerCase().includes(appSearch.toLowerCase());
+      candidateName.includes(q) || jobName.includes(q) || companyName.includes(q);
     const matchStatus = appStatusFilter === "All" || a.status === appStatusFilter;
     return matchSearch && matchStatus;
   });
@@ -370,11 +383,11 @@ export default function AdminDashboard() {
       <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-brand">
           <div className="sidebar-logo">
-            <Shield size={20} />
+            <Building2 size={20} />
           </div>
           <div>
             <span className="sidebar-brand-name">JobPortal</span>
-            <span className="sidebar-brand-sub">Admin Panel</span>
+            <span className="sidebar-brand-sub">Recruiter & Companies</span>
           </div>
           <button className="sidebar-close-mobile" onClick={() => setSidebarOpen(false)}>
             <X size={18} />
@@ -389,7 +402,7 @@ export default function AdminDashboard() {
               onClick={() => { setActiveSection(item.id); setSidebarOpen(false); }}
             >
               {item.icon}
-              <span>{item.label}</span>
+              <span>{item.id === "jobs" ? "My Job Listings" : item.id === "applications" ? "Candidate Applications" : item.label}</span>
               {activeSection === item.id && <ChevronRight size={14} className="nav-chevron" />}
             </button>
           ))}
@@ -397,10 +410,12 @@ export default function AdminDashboard() {
 
         <div className="sidebar-footer">
           <div className="sidebar-user-info">
-            <div className="sidebar-avatar">A</div>
+            <div className="sidebar-avatar">
+              {(user?.name || "R")[0]?.toUpperCase()}
+            </div>
             <div>
-              <p className="sidebar-user-name">Admin</p>
-              <p className="sidebar-user-email">admin@jobportal.com</p>
+              <p className="sidebar-user-name">{user?.name || "Recruiter"}</p>
+              <p className="sidebar-user-email">{user?.companyName ? user.companyName : user?.email || "recruiter@portal.com"}</p>
             </div>
           </div>
           <button className="sidebar-logout-btn" onClick={handleLogout} title="Logout">
@@ -421,7 +436,7 @@ export default function AdminDashboard() {
               <Menu size={22} />
             </button>
             <div className="topbar-breadcrumb">
-              <span className="breadcrumb-parent">Admin</span>
+              <span className="breadcrumb-parent">Recruiter</span>
               <ChevronRight size={14} />
               <span className="breadcrumb-current">
                 {navItems.find((n) => n.id === activeSection)?.label}
@@ -438,8 +453,8 @@ export default function AdminDashboard() {
               <span>View Site</span>
             </Link>
             <div className="topbar-admin-chip">
-              <Shield size={14} />
-              <span>Admin</span>
+              <Building2 size={14} />
+              <span>{user?.companyName || "Recruiter / Company"}</span>
             </div>
           </div>
         </header>
@@ -726,34 +741,58 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredApps.map((app) => (
-                      <tr key={app.id}>
-                        <td>
-                          <div className="candidate-cell">
-                            <div className="candidate-avatar">{app.candidate[0]}</div>
-                            <span>{app.candidate}</span>
-                          </div>
-                        </td>
-                        <td>{app.job}</td>
-                        <td>{app.company}</td>
-                        <td>
-                          <span className="date-cell"><Clock size={12} /> {app.applied}</span>
-                        </td>
-                        <td><StatusBadge status={app.status} /></td>
-                        <td>
-                          <select
-                            className="status-select"
-                            value={app.status}
-                            onChange={(e) => handleUpdateAppStatus(app.id, e.target.value)}
-                          >
-                            <option>Under Review</option>
-                            <option>Shortlisted</option>
-                            <option>Hired</option>
-                            <option>Rejected</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredApps.map((app) => {
+                      const cName = app.candidate || app.candidateName || app.name || "Candidate";
+                      const jTitle = app.job || app.jobTitle || "Role";
+                      const appDate = app.applied || app.appliedDate || "Recently";
+                      const candidateEmail = app.candidateEmail || app.email;
+                      return (
+                        <tr key={app.id}>
+                          <td>
+                            <div className="candidate-cell">
+                              <div className="candidate-avatar">{cName[0]?.toUpperCase()}</div>
+                              <div>
+                                <span style={{ fontWeight: 600 }}>{cName}</span>
+                                {candidateEmail && (
+                                  <div style={{ fontSize: "0.78rem", color: "var(--text-muted, #94a3b8)" }}>
+                                    {candidateEmail}
+                                  </div>
+                                )}
+                                {app.resume && (
+                                  <a
+                                    href={app.resume}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ fontSize: "0.78rem", color: "#3b82f6", display: "inline-block", marginTop: "2px" }}
+                                  >
+                                    📄 Resume Preview
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td>{jTitle}</td>
+                          <td>{app.company}</td>
+                          <td>
+                            <span className="date-cell"><Clock size={12} /> {appDate}</span>
+                          </td>
+                          <td><StatusBadge status={app.status} /></td>
+                          <td>
+                            <select
+                              className="status-select"
+                              value={app.status}
+                              onChange={(e) => handleUpdateAppStatus(app.id, e.target.value)}
+                            >
+                              <option>Pending</option>
+                              <option>Under Review</option>
+                              <option>Shortlisted</option>
+                              <option>Hired</option>
+                              <option>Rejected</option>
+                            </select>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {filteredApps.length === 0 && (
                       <tr>
                         <td colSpan={6} className="empty-table-row">No applications found.</td>

@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Sparkles,
   Briefcase,
+  Building2,
   ShieldCheck
 } from "lucide-react";
 import "./Auth.css";
@@ -25,18 +26,18 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Quick Demo fill
+  // Quick Demo fill - Candidate
   const handleFillDemo = () => {
     setEmail("demo@jobportal.com");
     setPassword("Demo@123");
-    showToast("Filled demo credentials!", "info");
+    showToast("Filled Candidate credentials!", "info");
   };
 
-  // Quick Admin fill
-  const handleFillAdmin = () => {
-    setEmail("admin@jobportal.com");
-    setPassword("Admin@123");
-    showToast("Filled admin credentials!", "info");
+  // Quick Recruiter / Company fill
+  const handleFillEmployer = () => {
+    setEmail("recruiter@techsolutions.com");
+    setPassword("Recruiter@123");
+    showToast("Filled Recruiter / Company credentials!", "info");
   };
 
   const handleSubmit = async (e) => {
@@ -46,12 +47,12 @@ function Login() {
     try {
       const userData = await login({ email, password });
 
-      if (userData.role === "admin") {
-        showToast("🛡️ Welcome, Admin!", "success");
+      if (userData.role === "admin" || userData.role === "employer" || userData.role === "recruiter") {
+        showToast(`🏢 Welcome, ${userData.name || "Recruiter"}! Recruiter portal ready.`, "success");
         setTimeout(() => navigate("/admin/dashboard"), 400);
       } else {
         showToast(`🎉 Welcome back, ${userData.name}!`, "success");
-        setTimeout(() => navigate("/"), 500);
+        setTimeout(() => navigate("/jobs"), 500);
       }
     } catch (err) {
       showToast(err.message || "Invalid email or password.", "error");
@@ -76,8 +77,8 @@ function Login() {
         {/* Demo Fast Login Helper */}
         <div className="demo-credentials-banner">
           <div>
-            <span className="demo-label">Quick Login Options</span>
-            <p>Fill credentials instantly for testing.</p>
+            <span className="demo-label">Quick 1-Click Login</span>
+            <p>Select your user role to auto-fill credentials.</p>
           </div>
           <div className="demo-btn-group">
             <button
@@ -85,14 +86,15 @@ function Login() {
               className="btn-fill-demo"
               onClick={handleFillDemo}
             >
-              <Sparkles size={13} /> Candidate
+              <Sparkles size={13} /> Candidate (Job Seeker)
             </button>
             <button
               type="button"
-              className="btn-fill-admin"
-              onClick={handleFillAdmin}
+              className="btn-fill-demo"
+              style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981", borderColor: "rgba(16, 185, 129, 0.3)" }}
+              onClick={handleFillEmployer}
             >
-              <ShieldCheck size={13} /> Admin
+              <Building2 size={13} /> Recruiter (Company)
             </button>
           </div>
         </div>

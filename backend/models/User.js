@@ -52,10 +52,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    companyName: {
+      type: String,
+      default: "",
+    },
     role: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user",
+      enum: ["user", "candidate", "jobseeker", "employer", "recruiter", "admin"],
+      default: "jobseeker",
     },
     savedJobs: [
       {

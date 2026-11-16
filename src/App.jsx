@@ -30,7 +30,7 @@ function ScrollToTop() {
 // Wrapper that hides Navbar/Footer on admin pages
 function AppLayout() {
   const { pathname } = useLocation();
-  const isAdminPage = pathname.startsWith("/admin");
+  const isAdminPage = pathname.startsWith("/admin") || pathname.startsWith("/employer");
 
   return (
     <>
@@ -79,9 +79,17 @@ function AppLayout() {
           }
         />
 
-        {/* Admin Routes */}
+        {/* Employer & Admin Routes */}
         <Route
           path="/admin/dashboard"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/employer/dashboard"
           element={
             <AdminRoute>
               <AdminDashboard />

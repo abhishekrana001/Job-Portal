@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getStoredApplications, deleteApplicationRecord } from "../utils/jobStorage";
+import { useAuth } from "../context/AuthContext";
 import {
   FileText,
   Building2,
@@ -16,28 +18,36 @@ import { useToast } from "../context/ToastContext";
 import "./Applications.css";
 
 function Applications() {
-  const [applications, setApplications] = useState([]);
+  const { user } = useAuth();
+  const [applications, setApplications] = useState(() => getStoredApplications());
   const [activeFilter, setActiveFilter] = useState("All");
   const { showToast } = useToast();
 
+  const loadApps = () => {
+    const all = getStoredApplications();
+    // If logged in as specific candidate, show user's applications or all applications
+    const candidateEmail = user?.email?.toLowerCase();
+    const userApps = candidateEmail
+      ? all.filter((a) => !a.candidateEmail || a.candidateEmail.toLowerCase() === candidateEmail || a.email?.toLowerCase() === candidateEmail)
+      : all;
+    setApplications(userApps.length > 0 ? userApps : all);
+  };
+
   useEffect(() => {
-    try {
-      const savedApps = JSON.parse(localStorage.getItem("applications")) || [];
-      setApplications(savedApps);
-    } catch (e) {
-      setApplications([]);
-    }
-  }, []);
+    loadApps();
+    const handleSync = () => loadApps();
+    window.addEventListener("applicationStorageUpdated", handleSync);
+    window.addEventListener("storage", handleSync);
+    return () => {
+      window.removeEventListener("applicationStorageUpdated", handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
+  }, [user?.email]);
 
   const handleWithdraw = (appId, jobTitle) => {
-    try {
-      const updated = applications.filter((app) => app.id !== appId);
-      localStorage.setItem("applications", JSON.stringify(updated));
-      setApplications(updated);
-      showToast(`Withdrew application for "${jobTitle}"`, "info");
-    } catch (e) {
-      console.error(e);
-    }
+    deleteApplicationRecord(appId);
+    loadApps();
+    showToast(`Withdrew application for "${jobTitle}"`, "info");
   };
 
   const filteredApps = applications.filter((app) => {

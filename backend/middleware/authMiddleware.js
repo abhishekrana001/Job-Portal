@@ -33,4 +33,13 @@ const adminOnly = (req, res, next) => {
   }
 };
 
-module.exports = { protect, adminOnly };
+// Employer or Admin middleware
+const employerOrAdmin = (req, res, next) => {
+  if (req.user && ["admin", "employer", "recruiter"].includes(req.user.role)) {
+    next();
+  } else {
+    res.status(403).json({ message: "Access denied: Employers and Recruiters only" });
+  }
+};
+
+module.exports = { protect, adminOnly, employerOrAdmin };

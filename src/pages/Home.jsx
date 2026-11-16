@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import JobCard from "../components/JobCard";
-import jobs from "../data/jobs";
+import { getStoredJobs } from "../utils/jobStorage";
 import {
   Search,
   MapPin,
@@ -95,6 +95,17 @@ function Home() {
   const [location, setLocation] = useState("");
   const [jobType, setJobType] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [jobs, setJobs] = useState(() => getStoredJobs());
+
+  useEffect(() => {
+    const handleSync = () => setJobs(getStoredJobs());
+    window.addEventListener("jobStorageUpdated", handleSync);
+    window.addEventListener("storage", handleSync);
+    return () => {
+      window.removeEventListener("jobStorageUpdated", handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();

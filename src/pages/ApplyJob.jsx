@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import jobs from "../data/jobs";
+import { getJobById, submitApplication } from "../utils/jobStorage";
+import { applicationsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import {
@@ -24,7 +25,7 @@ function ApplyJob() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const job = jobs.find((j) => j.id === Number(id));
+  const job = getJobById(id);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -66,40 +67,46 @@ function ApplyJob() {
     showToast("Sample resume link inserted!", "info");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      const existingApplications =
-        JSON.parse(localStorage.getItem("applications")) || [];
-
-      const newApplication = {
-        id: Date.now(),
+      // 1. Submit to local synchronized store
+      submitApplication({
         jobId: job.id,
         jobTitle: job.title,
         company: job.company,
         location: job.location,
         salary: job.salary,
-        appliedDate: new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
-        status: "Applied",
-        ...formData,
-      };
+        type: job.type || "Full Time",
+        candidateEmail: user?.email || formData.email,
+        candidateName: formData.name,
+        candidatePhone: formData.phone,
+        resume: formData.resume,
+        coverLetter: formData.coverLetter,
+        status: "Pending",
+      });
 
-      localStorage.setItem(
-        "applications",
-        JSON.stringify([newApplication, ...existingApplications])
-      );
+      // 2. Try backend API if accessible
+      try {
+        await applicationsAPI.apply({
+          jobId: job.id,
+          fullName: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          resumeUrl: formData.resume,
+          coverLetter: formData.coverLetter,
+        });
+      } catch (backendErr) {
+        // Backend offline or mock - local store will handle it seamlessly
+      }
 
-      showToast(`🎉 Application for ${job.title} submitted successfully!`, "success");
+      showToast(`🎉 Application for "${job.title}" submitted successfully!`, "success");
 
       setTimeout(() => {
         navigate("/applications");
-      }, 800);
+      }, 700);
     } catch (err) {
       console.error(err);
       showToast("Failed to submit application. Please try again.", "error");
